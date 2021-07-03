@@ -105,6 +105,7 @@ router.post("/signup", upload.any(), (req, res) => {
 	to verify the user's email
 	*/
 	let token = uuid();
+	console.log('token',token)
 
 	/*
 	Making that URL which would be sent to the user's email upon clicking the user's email will be
