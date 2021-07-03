@@ -101,20 +101,6 @@ router.post("/signup", upload.any(), (req, res) => {
 	var hash = bcrypt.hashSync(pwd, salt);
 
 	/*
-	Creating a random token which we would send with the email verification email. This would be used
-	to verify the user's email
-	*/
-	let token = uuid();
-	console.log('token',token)
-
-	/*
-	Making that URL which would be sent to the user's email upon clicking the user's email will be
-	verified 
-	*/
-	let baseURL = req.protocol + "://" + req.get("host");
-	let verificationURL = `${baseURL}/verify?token=${token}`;
-
-	/*
 	req.filename is the name of the file which is being stored in public/profileImages/
 	We would then use this name to access the profile image on the client
 	*/
@@ -129,6 +115,15 @@ router.post("/signup", upload.any(), (req, res) => {
 		token,
 		verified: false,
 	});
+
+	/*
+	Making that URL which would be sent to the user's email upon clicking the user's email will be
+	verified 
+	*/
+	let token = newUser._id;
+
+	let baseURL = req.protocol + "://" + req.get("host");
+	let verificationURL = `${baseURL}/verify?token=${token}`;
 
 	User.findOne({ email })
 		.lean()
@@ -166,7 +161,7 @@ router.post("/signup", upload.any(), (req, res) => {
 									return res.json({
 										status: false,
 										msg: UNEXPECTED_ERROR,
-										appearance:"error",
+										appearance: "error",
 									});
 								} else {
 									return res.send({
@@ -218,7 +213,7 @@ router.get("/verify", (req, res) => {
 		/*
 		Checking if the there is a URL with that token in the DB
 		*/
-		User.findOne({ token })
+		User.findById(token)
 			.then((user) => {
 				if (user) {
 					/*
@@ -226,10 +221,7 @@ router.get("/verify", (req, res) => {
 					Updating verified to true as the email has been verified
 					Updating token to undefined because we do not need the token now
 					*/
-					User.findOneAndUpdate(
-						{ token },
-						{ verified: true, token: undefined }
-					)
+					User.findByIdAndUpdate(token, { verified: true })
 						.then(() => {
 							return res.send({
 								status: true,
