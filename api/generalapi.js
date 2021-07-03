@@ -112,7 +112,6 @@ router.post("/signup", upload.any(), (req, res) => {
 		profileImg: req.filename,
 		role,
 		phoneNo,
-		token,
 		verified: false,
 	});
 

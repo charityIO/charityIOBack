@@ -9,7 +9,6 @@ const User = new mongoose.Schema({
   profileImg:String,
   role:String,
   verified:Boolean,
-  token:String
 });
 
 module.exports = mongoose.model('User',User)
