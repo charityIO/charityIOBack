@@ -7,7 +7,9 @@ const User = new mongoose.Schema({
   email:String,
   phoneNo:Number,
   profileImg:String,
-  role:String
+  role:String,
+  verified:Boolean,
+  token:String
 });
 
 module.exports = mongoose.model('User',User)
