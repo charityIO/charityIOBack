@@ -33,7 +33,7 @@ var upload = multer({ storage: storage });
 router.post("/signin", (req, res) => {
 	let { email, pwd } = req.body;
 
-	User.findOne({ email })
+	User.findOne({ email:email.toLowerCase() })
 		.lean()
 		.then((user) => {
 			if (user) {
@@ -108,7 +108,7 @@ router.post("/signup", upload.any(), (req, res) => {
 		fname,
 		lname,
 		pwd: hash,
-		email,
+		email:email.toLowerCase(),
 		profileImg: req.filename,
 		role,
 		phoneNo,

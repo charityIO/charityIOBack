@@ -43,13 +43,14 @@ var profileUpload = multer({ storage: profileStorage });
 /*
 This route is used to update user's profile
 */
+
 router.post("/updateProfile", profileUpload.any(), (req, res) => {
 	let { fname, lname, password, email, image } = req.body;
 	let updatedProfile = {
 		fname,
 		lname,
 		password,
-		email,
+		email: email.toLowerCase(),
 		profileImg: req.filename || image, // check if there is a new file uploaded otherwise, keep on using the old filename
 	};
 
@@ -183,6 +184,27 @@ router.post("/updateEvent", eventUpload.any(), (req, res) => {
 	}
 });
 
+router.post("/profile", (req, res) => {
+	let { id } = req.body;
+	User.findById(id)
+		.lean()
+		.then((user) => {
+			delete user.pwd;
+			res.send({
+				status: true,
+				user,
+			});
+		})
+		.catch((err) => {
+			res.send({
+				status: false,
+				msg: UNEXPECTED_ERROR,
+				appearance: "error",
+				err,
+			});
+		});
+});
+
 /*
 This route fetches an event based on its IDs
 */
@@ -264,28 +286,37 @@ This route only fetches those events from the DB who have
 1) The logged in user as the volunteer(in case of a volunteer)
 2) The loggeed in user as the event organizer(in case of a charity)
 */
-router.get("/myEvents", (req, res) => {
-	Event.find(
-		req.user.role == "charity"
-			? { organizer: req.user.email }
-			: { volunteers: req.user.email }
-	)
-		.lean()
-		.sort({ createdAt: -1 })
-		.then((events) => {
-			/*
+router.post("/myEvents", (req, res) => {
+	let { id } = req.body;
+	User.findById(id)
+		.then((user) => {
+			Event.find({
+				$or: [{ organizer: user.email }, { volunteers: user.email }],
+			})
+				.lean()
+				.sort({ createdAt: -1 })
+				.then((events) => {
+					/*
 			Converting start and end date to their appropriate frontend expected format
 			*/
-			res.send({
-				status: true,
-				events: events.map((event) => {
-					return {
-						...event,
-						start: dayjs(event.start).format("YYYY-MM-DD"),
-						end: dayjs(event.end).format("YYYY-MM-DD"),
-					};
-				}),
-			});
+					res.send({
+						status: true,
+						events: events.map((event) => {
+							return {
+								...event,
+								start: dayjs(event.start).format("YYYY-MM-DD"),
+								end: dayjs(event.end).format("YYYY-MM-DD"),
+							};
+						}),
+					});
+				})
+				.catch(() => {
+					res.send({
+						status: false,
+						msg: UNEXPECTED_ERROR,
+						appearance: "error",
+					});
+				});
 		})
 		.catch(() => {
 			res.send({
@@ -376,6 +407,7 @@ router.post("/sendVolunteeringRequest", (req, res) => {
 
 	let newNotification = new Notification({
 		to: organizer,
+		volunteerId: req.user._id,
 		from: req.user.email,
 		message: `Hi, ${req.user.email} wants to be a volunteer for ${name} event`,
 		eventID: id,

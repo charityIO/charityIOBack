@@ -7,7 +7,8 @@ const Notification = new mongoose.Schema({
   type:String,
   eventID:String,
   seen:Boolean,
-  catered:Boolean
+  catered:Boolean,
+  volunteerId:String
 },{timestamps:true});
 
 module.exports = mongoose.model('Notification',Notification)
